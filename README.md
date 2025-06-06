@@ -235,9 +235,9 @@ There's a `A2AClient` class, which provides methods for interacting with an A2A 
 ### Key Features:
 
 - **JSON-RPC Communication:** Handles sending requests and receiving responses (both standard and streaming via Server-Sent Events) according to the JSON-RPC 2.0 specification.
-- **A2A Methods:** Implements standard A2A methods like `sendTask`, `sendTaskSubscribe`, `getTask`, `cancelTask`, `setTaskPushNotification`, `getTaskPushNotification`, and `resubscribeTask`.
+- **A2A Methods:** Implements standard A2A methods like `sendMessage`, `sendMessageStream`, `getTask`, `cancelTask`, `setTaskPushNotificationConfig`, `getTaskPushNotificationConfig`, and `resubscribeTask`.
 - **Error Handling:** Provides basic error handling for network issues and JSON-RPC errors.
-- **Streaming Support:** Manages Server-Sent Events (SSE) for real-time task updates (`sendTaskSubscribe`, `resubscribeTask`).
+- **Streaming Support:** Manages Server-Sent Events (SSE) for real-time task updates (`sendMessageStream`, `resubscribeTask`).
 - **Extensibility:** Allows providing a custom `fetch` implementation for different environments (e.g., Node.js).
 
 ### Basic Usage
