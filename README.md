@@ -34,23 +34,22 @@ import { AgentCard } from "a2a-sdk";
 const movieAgentCard: AgentCard = {
   name: 'Movie Agent',
   description: 'An agent that can answer questions about movies and actors using TMDB.',
-  // Adjust the base URL and port as needed. /a2a is the default base in A2AExpressApp
-  url: 'http://localhost:41241/', // Example: if baseUrl in A2AExpressApp 
+  // Adjust the base URL and port as needed.
+  url: 'http://localhost:41241/',
   provider: {
-    organization: 'A2A Samples',
-    url: 'https://example.com/a2a-samples' // Added provider URL
+    organization: 'A2A Agents',
+    url: 'https://example.com/a2a-agents' // Added provider URL
   },
   version: '0.0.2', // Incremented version
   capabilities: {
-    streaming: true, // The new framework supports streaming
+    streaming: true, // Supports streaming
     pushNotifications: false, // Assuming not implemented for this agent yet
     stateTransitionHistory: true, // Agent uses history
   },
-  // authentication: null, // Property 'authentication' does not exist on type 'AgentCard'.
   securitySchemes: undefined, // Or define actual security schemes if any
   security: undefined,
-  defaultInputModes: ['text'],
-  defaultOutputModes: ['text', 'task-status'], // task-status is a common output mode
+  defaultInputModes: ['text/plain'],
+  defaultOutputModes: ['text/plain'],
   skills: [
     {
       id: 'general_movie_chat',
@@ -65,8 +64,8 @@ const movieAgentCard: AgentCard = {
         'Find action movies starring Keanu Reeves',
         'Which came out first, Jurassic Park or Terminator 2?',
       ],
-      inputModes: ['text'], // Explicitly defining for skill
-      outputModes: ['text', 'task-status'] // Explicitly defining for skill
+      inputModes: ['text/plain'], // Explicitly defining for skill
+      outputModes: ['text/plain'] // Explicitly defining for skill
     },
   ],
   supportsAuthenticatedExtendedCard: false,
