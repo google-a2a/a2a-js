@@ -11,12 +11,12 @@ import { TaskStore } from "../store.js";
 import { A2ARequestHandler } from "./a2a_request_handler.js";
 
 export class DefaultRequestHandler implements A2ARequestHandler {
-    private agentCard: AgentCard;
-    private taskStore: TaskStore;
-    private agentExecutor: AgentExecutor;
-    private eventBusManager: IExecutionEventBusManager;
+    private readonly agentCard: AgentCard;
+    private readonly taskStore: TaskStore;
+    private readonly agentExecutor: AgentExecutor;
+    private readonly eventBusManager: IExecutionEventBusManager;
     // Store for push notification configurations (could be part of TaskStore or separate)
-    private pushNotificationConfigs: Map<string, PushNotificationConfig> = new Map();
+    private readonly pushNotificationConfigs: Map<string, PushNotificationConfig> = new Map();
 
 
     constructor(
