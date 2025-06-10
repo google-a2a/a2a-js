@@ -2,6 +2,7 @@ import {
   AgentCard,
   AgentCapabilities,
   JSONRPCRequest,
+  JSONRPCResponse,
   JSONRPCSuccessResponse,
   JSONRPCError,
   JSONRPCErrorResponse,
@@ -131,7 +132,7 @@ export class A2AClient {
    * @param params The parameters for the RPC method.
    * @returns A Promise that resolves to the RPC response.
    */
-  private async _postRpcRequest<TParams, TResponse extends (JSONRPCSuccessResponse | JSONRPCErrorResponse)>(
+  private async _postRpcRequest<TParams, TResponse extends JSONRPCResponse>(
     method: string,
     params: TParams
   ): Promise<TResponse> {
@@ -445,7 +446,7 @@ export class A2AClient {
       const sseJsonRpcResponse = JSON.parse(jsonData.replace(/\n$/, '')); // Remove trailing newline if any
 
       // Type assertion to SendStreamingMessageResponse, as this is the expected structure for A2A streams.
-      const a2aStreamResponse = sseJsonRpcResponse as SendStreamingMessageResponse;
+      const a2aStreamResponse: SendStreamingMessageResponse = sseJsonRpcResponse as SendStreamingMessageResponse;
 
       if (a2aStreamResponse.id !== originalRequestId) {
         // According to JSON-RPC spec, notifications (which SSE events can be seen as) might not have an ID,
@@ -454,7 +455,7 @@ export class A2AClient {
         // Depending on strictness, this could be an error. For now, it's a warning.
       }
 
-      if (a2aStreamResponse.error) {
+      if (this.isErrorResponse(a2aStreamResponse)) {
         const err = a2aStreamResponse.error as (JSONRPCError | A2AError);
         throw new Error(`SSE event contained an error: ${err.message} (Code: ${err.code}) Data: ${JSON.stringify(err.data)}`);
       }
@@ -475,5 +476,9 @@ export class A2AClient {
       console.error("Failed to parse SSE event data string or unexpected JSON-RPC structure:", jsonData, e);
       throw new Error(`Failed to parse SSE event data: "${jsonData.substring(0, 100)}...". Original error: ${e.message}`);
     }
+  }
+
+  isErrorResponse(response: JSONRPCResponse): response is JSONRPCErrorResponse {
+    return "error" in response;
   }
 }

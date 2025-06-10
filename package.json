@@ -19,6 +19,7 @@
     "@types/sinon": "^17.0.4",
     "chai": "^5.2.0",
     "gts": "^6.0.2",
+    "json-schema-to-typescript": "^15.0.4",
     "mocha": "^11.5.0",
     "sinon": "^20.0.0",
     "tsx": "^4.19.3",
@@ -28,7 +29,8 @@
     "clean": "gts clean",
     "build": "npx tsc -p .",
     "pretest": "npm run build",
-    "test": "mocha build/test/**/*.js"
+    "test": "mocha build/test/**/*.js",
+    "generate": "curl https://raw.githubusercontent.com/google-a2a/A2A/refs/heads/main/specification/json/a2a.json > spec.json && node scripts/generateTypes.js && rm spec.json"
   },
   "dependencies": {
     "@types/cors": "^2.8.17",

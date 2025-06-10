@@ -5,13 +5,13 @@ import * as schema from "../types.js";
  */
 export class A2AError extends Error {
   public code: number;
-  public data?: unknown;
+  public data?: Record<string, unknown>;
   public taskId?: string; // Optional task ID context
 
   constructor(
     code: number,
     message: string,
-    data?: unknown,
+    data?: Record<string, unknown>,
     taskId?: string
   ) {
     super(message);
@@ -29,19 +29,21 @@ export class A2AError extends Error {
       code: this.code,
       message: this.message,
     };
-    if (this.data !== undefined) {
+
+    if(this.data !== undefined) {
       errorObject.data = this.data;
     }
+ 
     return errorObject;
   }
 
   // Static factory methods for common errors
 
-  static parseError(message: string, data?: unknown): A2AError {
+  static parseError(message: string, data?: Record<string, unknown>): A2AError {
     return new A2AError(-32700, message, data);
   }
 
-  static invalidRequest(message: string, data?: unknown): A2AError {
+  static invalidRequest(message: string, data?: Record<string, unknown>): A2AError {
     return new A2AError(-32600, message, data);
   }
 
@@ -52,11 +54,11 @@ export class A2AError extends Error {
     );
   }
 
-  static invalidParams(message: string, data?: unknown): A2AError {
+  static invalidParams(message: string, data?: Record<string, unknown>): A2AError {
     return new A2AError(-32602, message, data);
   }
 
-  static internalError(message: string, data?: unknown): A2AError {
+  static internalError(message: string, data?: Record<string, unknown>): A2AError {
     return new A2AError(-32603, message, data);
   }
 

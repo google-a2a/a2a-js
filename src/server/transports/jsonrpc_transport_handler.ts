@@ -1,5 +1,5 @@
 import { A2AResponse } from "../../a2a_response.js";
-import { JSONRPCRequest, JSONRPCErrorResponse, MessageSendParams, TaskQueryParams, TaskIdParams, TaskPushNotificationConfig, JSONRPCSuccessResponse } from "../../types.js";
+import { JSONRPCRequest, JSONRPCErrorResponse, MessageSendParams, TaskQueryParams, TaskIdParams, TaskPushNotificationConfig, JSONRPCSuccessResponse, SendStreamingMessageSuccessResponse, A2ARequest } from "../../types.js";
 import { A2AError } from "../error.js";
 import { A2ARequestHandler } from "../request_handler/a2a_request_handler.js";
 
@@ -21,13 +21,13 @@ export class JsonRpcTransportHandler {
     public async handle(
         requestBody: any
     ): Promise<A2AResponse | AsyncGenerator<A2AResponse, void, undefined>> {
-        let rpcRequest: JSONRPCRequest;
+        let rpcRequest: A2ARequest;
 
         try {
             if (typeof requestBody === 'string') {
                 rpcRequest = JSON.parse(requestBody);
             } else if (typeof requestBody === 'object' && requestBody !== null) {
-                rpcRequest = requestBody as JSONRPCRequest;
+                rpcRequest = requestBody as A2ARequest;
             } else {
                 throw A2AError.parseError('Invalid request body type.');
             }
@@ -63,7 +63,7 @@ export class JsonRpcTransportHandler {
                     : this.requestHandler.resubscribe(params as TaskIdParams);
 
                 // Wrap the agent event stream into a JSON-RPC result stream
-                return (async function* jsonRpcEventStream(): AsyncGenerator<JSONRPCSuccessResponse, void, undefined> {
+                return (async function* jsonRpcEventStream(): AsyncGenerator<A2AResponse, void, undefined> {
                     try {
                         for await (const event of agentEventStream) {
                             yield {
@@ -114,7 +114,7 @@ export class JsonRpcTransportHandler {
                     jsonrpc: '2.0',
                     id: requestId,
                     result: result,
-                } as JSONRPCSuccessResponse;
+                } as A2AResponse;
             }
         } catch (error: any) {
             const a2aError = error instanceof A2AError ? error : A2AError.internalError(error.message || 'An unexpected error occurred.');
