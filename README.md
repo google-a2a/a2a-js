@@ -18,7 +18,7 @@
 You can install the A2A SDK using either `npm`.
 
 ```bash
-npm install a2a-sdk
+npm install @a2a-js/sdk
 ```
 
 You can also find JavaScript samples [here](https://github.com/google-a2a/a2a-samples/tree/main/samples/js).
@@ -29,7 +29,7 @@ This directory contains a TypeScript server implementation for the Agent-to-Agen
 
 ### 1. Define Agent Card
 ```typescript
-import { AgentCard } from "a2a-sdk";
+import { AgentCard } from "@a2a-js/sdk";
 
 const movieAgentCard: AgentCard = {
   name: 'Movie Agent',
@@ -82,7 +82,7 @@ import {
   RequestContext,
   IExecutionEventBus,
   DefaultRequestHandler,
-} from "a2a-sdk";
+} from "@a2a-js/sdk";
 
 // 1. Define your agent's logic as a AgentExecutor
 class MyAgentExecutor implements AgentExecutor {
@@ -165,6 +165,7 @@ class MyAgentExecutor implements AgentExecutor {
         final: true,
       };
       eventBus.publish(cancelledUpdate);
+      eventBus.finished();
       return;
     }
 
@@ -202,6 +203,7 @@ class MyAgentExecutor implements AgentExecutor {
       final: true,
     };
     eventBus.publish(finalUpdate);
+    eventBus.finished();
   }
 }
 ```
@@ -227,6 +229,19 @@ expressApp.listen(PORT, () => {
   console.log('[MyAgent] Press Ctrl+C to stop the server');
 });
 ```
+### Agent Executor
+Developers are expected to implement this interface and provide two methods: `execute` and `cancelTask`.
+
+#### `execute`
+- This method is provided with a `RequestContext` and an `EventBus` to publish execution events.
+- Executor can either respond by publishing a Message or Task.
+- For a task, the first event should be a Task object.
+- Executor can subsequently publish `TaskStatusUpdateEvent` or `TaskArtifactUpdateEvent`.
+- Executor should indicate which is the `final` event and also call `finished()` method of event bus.
+- Executor should also check if an ongoing task has been cancelled. If yes, cancel the execution and emit an `TaskStatusUpdateEvent` with cancelled state.
+
+#### `cancelTask`
+Executors should implement cancellation mechanism for an ongoing task.
 
 ## A2A Client 
 
@@ -253,7 +268,7 @@ import {
   GetTaskResponse,
   SendMessageSuccessResponse,
   GetTaskSuccessResponse
-} from "a2a-sdk";
+} from "@a2a-js/sdk";
 import { v4 as uuidv4 } from "uuid";
 
 const client = new A2AClient("http://localhost:41241"); // Replace with your server URL
@@ -331,7 +346,7 @@ import {
   MessageSendParams,
   Task,
   Message,
-} from "a2a-sdk";
+} from "@a2a-js/sdk";
 import { v4 as uuidv4 } from "uuid";
 
 const client = new A2AClient("http://localhost:41241");

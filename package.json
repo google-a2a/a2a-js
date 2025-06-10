@@ -1,5 +1,5 @@
 {
-  "name": "a2a-sdk",
+  "name": "@a2a-js/sdk",
   "version": "0.2.1",
   "engines": {
     "node": ">=18"

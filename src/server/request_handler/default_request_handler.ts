@@ -136,6 +136,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
                 status: errorTask.status,
                 final: true,
             } as TaskStatusUpdateEvent);
+            eventBus.finished();
         });
 
         for await (const event of eventQueue.events()) {
