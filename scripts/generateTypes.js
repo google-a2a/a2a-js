@@ -14,6 +14,7 @@ const typeSchemaContents = fs.readFileSync(path.join(process.cwd(), 'spec.json')
 const typeSchema = JSON.parse(typeSchemaContents.toString());
 
 // Manually injecting TaskState enum names in pascal case.
+// https://github.com/bcherny/json-schema-to-typescript/tree/master?tab=readme-ov-file#custom-schema-properties
 typeSchema.definitions.TaskState["tsEnumNames"] = typeSchema.definitions.TaskState.enum.map(name => toPascalCase(name))
 
 compile(typeSchema, 'MySchema', {
