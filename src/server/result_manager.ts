@@ -5,7 +5,7 @@ import {
     TaskStatusUpdateEvent
 } from "../types.js";
 import { AgentExecutionEvent } from "./events/execution_event_bus.js";
-import { TaskStore, TaskAndHistory } from "./store.js";
+import { TaskStore } from "./store.js";
 
 
 export class ResultManager {
@@ -59,7 +59,7 @@ export class ResultManager {
                 // or we are rehydrating. Attempt to load.
                 const loaded = await this.taskStore.load(updateEvent.taskId);
                 if (loaded) {
-                    this.currentTask = loaded.task;
+                    this.currentTask = loaded;
                     this.currentTask.status = updateEvent.status;
                     if (updateEvent.status.message) {
                         if (!this.currentTask.history?.find(msg => msg.messageId === updateEvent.status.message!.messageId)) {
@@ -103,7 +103,7 @@ export class ResultManager {
                 // Similar to status update, try to load if task not in memory
                 const loaded = await this.taskStore.load(artifactEvent.taskId);
                 if (loaded) {
-                    this.currentTask = loaded.task;
+                    this.currentTask = loaded;
                     if (!this.currentTask.artifacts) this.currentTask.artifacts = [];
                     // Apply artifact update logic (as above)
                     const existingArtifactIndex = this.currentTask.artifacts.findIndex(
@@ -128,12 +128,7 @@ export class ResultManager {
 
     private async saveCurrentTask(): Promise<void> {
         if (this.currentTask) {
-            // Ensure history is part of the TaskAndHistory structure
-            const taskAndHistory: TaskAndHistory = {
-                task: this.currentTask,
-                history: this.currentTask.history || [], // Use existing history or empty array
-            };
-            await this.taskStore.save(taskAndHistory);
+            await this.taskStore.save(this.currentTask);
         }
     }
 

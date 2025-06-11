@@ -315,8 +315,8 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         
         assert.isTrue(saveSpy.calledThrice, 'TaskStore.save should be called 3 times');
         const lastSaveCall = saveSpy.lastCall.args[0];
-        assert.equal(lastSaveCall.task.id, taskId);
-        assert.equal(lastSaveCall.task.status.state, TaskState.Completed);
+        assert.equal(lastSaveCall.id, taskId);
+        assert.equal(lastSaveCall.status.state, TaskState.Completed);
     });
     
     it('getTask: should return an existing task from the store', async () => {
@@ -327,7 +327,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
             kind: 'task',
             history: []
         };
-        await mockTaskStore.save({ task: fakeTask, history: [] });
+        await mockTaskStore.save(fakeTask);
 
         const result = await handler.getTask({ id: 'task-exist' });
         assert.deepEqual(result, fakeTask);
@@ -336,7 +336,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
     it('set/getTaskPushNotificationConfig: should save and retrieve config', async () => {
         const taskId = 'task-push-config';
         const fakeTask: Task = { id: taskId, contextId: 'ctx-push', status: { state: TaskState.Working }, kind: 'task' };
-        await mockTaskStore.save({ task: fakeTask, history: [] });
+        await mockTaskStore.save(fakeTask);
     
         const pushConfig: PushNotificationConfig = {
             url: 'https://example.com/notify',
@@ -404,7 +404,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
     it('cancelTask: should fail for tasks in a terminal state', async () => {
         const taskId = 'task-terminal';
         const fakeTask: Task = { id: taskId, contextId: 'ctx-terminal', status: { state: TaskState.Completed }, kind: 'task' };
-        await mockTaskStore.save({ task: fakeTask, history: [] });
+        await mockTaskStore.save(fakeTask);
 
         try {
             await handler.cancelTask({ id: taskId });

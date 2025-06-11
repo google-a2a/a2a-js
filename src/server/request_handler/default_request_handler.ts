@@ -44,19 +44,18 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         let referenceTasks: Task[] | undefined;
 
         if (incomingMessage.taskId) {
-            const taskAndHistory = await this.taskStore.load(incomingMessage.taskId);
-            if (!taskAndHistory) {
+            task = await this.taskStore.load(incomingMessage.taskId);
+            if (!task) {
                 throw A2AError.taskNotFound(incomingMessage.taskId);
             }
-            task = taskAndHistory.task;
         }
 
         if (incomingMessage.referenceTaskIds && incomingMessage.referenceTaskIds.length > 0) {
             referenceTasks = [];
             for (const refId of incomingMessage.referenceTaskIds) {
-                const refTaskAndHistory = await this.taskStore.load(refId);
-                if (refTaskAndHistory) {
-                    referenceTasks.push(refTaskAndHistory.task);
+                const refTask = await this.taskStore.load(refId);
+                if (refTask) {
+                    referenceTasks.push(refTask);
                 } else {
                     console.warn(`Reference task ${refId} not found.`);
                     // Optionally, throw an error or handle as per specific requirements
@@ -227,11 +226,10 @@ export class DefaultRequestHandler implements A2ARequestHandler {
     }
 
     async getTask(params: TaskQueryParams): Promise<Task> {
-        const taskAndHistory = await this.taskStore.load(params.id);
-        if (!taskAndHistory) {
+        const task = await this.taskStore.load(params.id);
+        if (!task) {
             throw A2AError.taskNotFound(params.id);
         }
-        let task = taskAndHistory.task;
         if (params.historyLength !== undefined && params.historyLength >= 0) {
             if (task.history) {
                 task.history = task.history.slice(-params.historyLength);
@@ -244,12 +242,11 @@ export class DefaultRequestHandler implements A2ARequestHandler {
     }
 
     async cancelTask(params: TaskIdParams): Promise<Task> {
-        const taskAndHistory = await this.taskStore.load(params.id);
-        if (!taskAndHistory) {
+        const task = await this.taskStore.load(params.id);
+        if (!task) {
             throw A2AError.taskNotFound(params.id);
         }
 
-        const task = taskAndHistory.task;
         // Check if task is in a cancelable state
         const nonCancelableStates = [
             TaskState.Completed,
@@ -283,11 +280,11 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             // Add cancellation message to history
             task.history = [...(task.history || []), task.status.message];
 
-            await this.taskStore.save({ task, history: task.history || [] });
+            await this.taskStore.save(task);
         }
-        
-        const latestTaskAndHistory = await this.taskStore.load(params.id);
-        return latestTaskAndHistory.task;
+
+        const latestTask = await this.taskStore.load(params.id);
+        return latestTask;
     }
 
     async setTaskPushNotificationConfig(
@@ -336,20 +333,20 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             throw A2AError.unsupportedOperation("Streaming (and thus resubscription) is not supported.");
         }
 
-        const taskAndHistory = await this.taskStore.load(params.id);
-        if (!taskAndHistory) {
+        const task = await this.taskStore.load(params.id);
+        if (!task) {
             throw A2AError.taskNotFound(params.id);
         }
 
         // Yield the current task state first
-        yield taskAndHistory.task;
+        yield task;
 
         // If task is already in a final state, no more events will come.
         const finalStates = [
             TaskState.Completed, TaskState.Failed,
             TaskState.Canceled, TaskState.Rejected
         ];
-        if (finalStates.includes(taskAndHistory.task.status.state)) {
+        if (finalStates.includes(task.status.state)) {
             return;
         }
 

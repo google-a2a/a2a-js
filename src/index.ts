@@ -15,7 +15,7 @@ export { ExecutionEventBusManager } from "./server/events/execution_event_bus_ma
 export type { A2ARequestHandler } from "./server/request_handler/a2a_request_handler.js";
 export { DefaultRequestHandler } from "./server/request_handler/default_request_handler.js";
 export { ResultManager } from "./server/result_manager.js";
-export type { TaskStore, TaskAndHistory } from "./server/store.js";
+export type { TaskStore } from "./server/store.js";
 export { InMemoryTaskStore } from "./server/store.js";
 
 export { JsonRpcTransportHandler } from "./server/transports/jsonrpc_transport_handler.js";

@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import * as schema from "../types.js";
+import {Task} from "../types.js";
 import { A2AError } from "./error.js";
 import {
   getCurrentTimestamp,
@@ -8,54 +8,43 @@ import {
   isTaskStatusUpdate,
 } from "./utils.js";
 
-// Helper type for the simplified store
-export interface TaskAndHistory {
-  task: schema.Task;
-  history: schema.Message[];
-}
-
 /**
  * Simplified interface for task storage providers.
- * Stores and retrieves both the task and its full message history together.
+ * Stores and retrieves the task.
  */
 export interface TaskStore {
   /**
-   * Saves a task and its associated message history.
+   * Saves a task.
    * Overwrites existing data if the task ID exists.
-   * @param data An object containing the task and its history.
+   * @param data An object containing the task.
    * @returns A promise resolving when the save operation is complete.
    */
-  save(data: TaskAndHistory): Promise<void>;
+  save(task: Task): Promise<void>;
 
   /**
-   * Loads a task and its history by task ID.
+   * Loads a task by task ID.
    * @param taskId The ID of the task to load.
-   * @returns A promise resolving to an object containing the Task and its history, or null if not found.
+   * @returns A promise resolving to an object containing the Task, or undefined if not found.
    */
-  load(taskId: string): Promise<TaskAndHistory | null>;
+  load(taskId: string): Promise<Task | undefined>;
 }
 
 // ========================
 // InMemoryTaskStore
 // ========================
 
-// Use TaskAndHistory directly for storage
+// Use Task directly for storage
 export class InMemoryTaskStore implements TaskStore {
-  private store: Map<string, TaskAndHistory> = new Map();
+  private store: Map<string, Task> = new Map();
 
-  async load(taskId: string): Promise<TaskAndHistory | null> {
+  async load(taskId: string): Promise<Task | undefined> {
     const entry = this.store.get(taskId);
     // Return copies to prevent external mutation
-    return entry
-      ? { task: { ...entry.task }, history: [...entry.history] }
-      : null;
+    return entry ? {...entry} : undefined;
   }
 
-  async save(data: TaskAndHistory): Promise<void> {
+  async save(task: Task): Promise<void> {
     // Store copies to prevent internal mutation if caller reuses objects
-    this.store.set(data.task.id, {
-      task: { ...data.task },
-      history: [...data.history],
-    });
+    this.store.set(task.id, {...task});
   }
 }
