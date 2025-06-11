@@ -13,24 +13,29 @@
     "README.md"
   ],
   "devDependencies": {
+    "@genkit-ai/googleai": "^1.8.0",
+    "@genkit-ai/vertexai": "^1.8.0",
     "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.13.14",
     "@types/sinon": "^17.0.4",
     "chai": "^5.2.0",
+    "genkit": "^1.8.0",
     "gts": "^6.0.2",
     "json-schema-to-typescript": "^15.0.4",
-    "mocha": "^11.5.0",
+    "mocha": "^11.6.0",
     "sinon": "^20.0.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
   "scripts": {
     "clean": "gts clean",
-    "build": "npx tsc -p .",
+    "build": "tsc -p .",
     "pretest": "npm run build",
     "test": "mocha build/test/**/*.js",
-    "generate": "curl https://raw.githubusercontent.com/google-a2a/A2A/refs/heads/main/specification/json/a2a.json > spec.json && node scripts/generateTypes.js && rm spec.json"
+    "generate": "curl https://raw.githubusercontent.com/google-a2a/A2A/refs/heads/main/specification/json/a2a.json > spec.json && node scripts/generateTypes.js && rm spec.json",
+    "sample:cli": "tsx src/samples/cli.ts",
+    "sample:movie-agent": "tsx src/samples/agents/movie-agent/index.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.17",
