@@ -113,7 +113,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
                 id: requestContext.task?.id || uuidv4(), // Use existing task ID or generate new
                 contextId: finalMessageForAgent.contextId!,
                 status: {
-                    state: TaskState.Failed,
+                    state: "failed",
                     message: {
                         kind: "message",
                         role: "agent",
@@ -197,7 +197,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
                 taskId: requestContext.task?.id || uuidv4(), // Use existing or a placeholder
                 contextId: finalMessageForAgent.contextId!,
                 status: {
-                    state: TaskState.Failed,
+                    state: "failed",
                     message: {
                         kind: "message",
                         role: "agent",
@@ -247,12 +247,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         }
 
         // Check if task is in a cancelable state
-        const nonCancelableStates = [
-            TaskState.Completed,
-            TaskState.Failed,
-            TaskState.Canceled,
-            TaskState.Rejected,
-        ];
+        const nonCancelableStates = ["completed", "failed", "canceled", "rejected"];
         if (nonCancelableStates.includes(task.status.state)) {
             throw A2AError.taskNotCancelable(params.id);
         }
@@ -265,7 +260,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         else {
             // Here we are marking task as cancelled. We are not waiting for the executor to actually cancel processing.
             task.status = {
-                state: TaskState.Canceled,
+                state: "canceled",
                 message: { // Optional: Add a system message indicating cancellation
                     kind: "message",
                     role: "agent",
@@ -341,10 +336,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         yield task;
 
         // If task is already in a final state, no more events will come.
-        const finalStates = [
-            TaskState.Completed, TaskState.Failed,
-            TaskState.Canceled, TaskState.Rejected
-        ];
+        const finalStates = ["completed", "failed", "canceled", "rejected"];
         if (finalStates.includes(task.status.state)) {
             return;
         }

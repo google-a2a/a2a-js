@@ -62,6 +62,22 @@ export type SecurityScheme =
  */
 export type CancelTaskResponse = JSONRPCErrorResponse | CancelTaskSuccessResponse;
 /**
+ * Represents the possible states of a Task.
+ *
+ * This interface was referenced by `MySchema`'s JSON-Schema
+ * via the `definition` "TaskState".
+ */
+export type TaskState =
+  | "submitted"
+  | "working"
+  | "input-required"
+  | "completed"
+  | "canceled"
+  | "failed"
+  | "rejected"
+  | "auth-required"
+  | "unknown";
+/**
  * JSON-RPC response for the 'tasks/pushNotificationConfig/set' method.
  *
  * This interface was referenced by `MySchema`'s JSON-Schema
@@ -2080,22 +2096,4 @@ export interface TaskStatus2 {
    * ISO 8601 datetime string when the status was recorded.
    */
   timestamp?: string;
-}
-
-/**
- * Represents the possible states of a Task.
- *
- * This interface was referenced by `MySchema`'s JSON-Schema
- * via the `definition` "TaskState".
- */
-export enum TaskState {
-  Submitted = "submitted",
-  Working = "working",
-  InputRequired = "input-required",
-  Completed = "completed",
-  Canceled = "canceled",
-  Failed = "failed",
-  Rejected = "rejected",
-  AuthRequired = "auth-required",
-  Unknown = "unknown"
 }

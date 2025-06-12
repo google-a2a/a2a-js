@@ -26,13 +26,13 @@ class CancellableMockAgentExecutor implements AgentExecutor {
         const taskId = requestContext.taskId;
         const contextId = requestContext.contextId;
         
-        eventBus.publish({ id: taskId, contextId, status: { state: TaskState.Submitted }, kind: 'task' });
-        eventBus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Working }, final: false });
+        eventBus.publish({ id: taskId, contextId, status: { state: "submitted" }, kind: 'task' });
+        eventBus.publish({ taskId, contextId, kind: 'status-update', status: { state: "working" }, final: false });
         
         // Simulate a long-running process
         for (let i = 0; i < 5; i++) {
             if (this.cancelledTasks.has(taskId)) {
-                eventBus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Canceled }, final: true });
+                eventBus.publish({ taskId, contextId, kind: 'status-update', status: { state: "canceled" }, final: true });
                 eventBus.finished();
                 return;
             }
@@ -40,7 +40,7 @@ class CancellableMockAgentExecutor implements AgentExecutor {
             await this.clock.tickAsync(100); 
         }
 
-        eventBus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Completed }, final: true });
+        eventBus.publish({ taskId, contextId, kind: 'status-update', status: { state: "completed" }, final: true });
         eventBus.finished();
     };
     
@@ -168,14 +168,14 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
             bus.publish({
                 id: taskId,
                 contextId,
-                status: { state: TaskState.Submitted },
+                status: { state: "submitted" },
                 kind: 'task'
             });
             bus.publish({
                 taskId,
                 contextId,
                 kind: 'status-update',
-                status: { state: TaskState.Working },
+                status: { state: "working" },
                 final: false
             });
             bus.publish({
@@ -188,7 +188,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
                 taskId,
                 contextId,
                 kind: 'status-update',
-                status: { state: TaskState.Completed, message: { role: 'agent', parts: [{kind: 'text', text: 'Done!'}], messageId: 'agent-msg-2', kind: 'message'} },
+                status: { state: "completed", message: { role: 'agent', parts: [{kind: 'text', text: 'Done!'}], messageId: 'agent-msg-2', kind: 'message'} },
                 final: true
             });
             bus.finished();
@@ -199,7 +199,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
 
         assert.equal(taskResult.kind, 'task');
         assert.equal(taskResult.id, taskId);
-        assert.equal(taskResult.status.state, TaskState.Completed);
+        assert.equal(taskResult.status.state, "completed");
         assert.isDefined(taskResult.artifacts, 'Task result should have artifacts');
         assert.isArray(taskResult.artifacts);
         assert.lengthOf(taskResult.artifacts!, 1);
@@ -214,11 +214,11 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         const contextId = 'ctx-stream-1';
 
         (mockAgentExecutor as MockAgentExecutor).execute.callsFake(async (ctx, bus) => {
-            bus.publish({ id: taskId, contextId, status: { state: TaskState.Submitted }, kind: 'task' });
+            bus.publish({ id: taskId, contextId, status: { state: "submitted" }, kind: 'task' });
             await new Promise(res => setTimeout(res, 10));
-            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Working }, final: false });
+            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: "working" }, final: false });
             await new Promise(res => setTimeout(res, 10));
-            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Completed }, final: true });
+            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: "completed" }, final: true });
             bus.finished();
         });
         
@@ -229,9 +229,9 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         }
 
         assert.lengthOf(events, 3, "Stream should yield 3 events");
-        assert.equal((events[0] as Task).status.state, TaskState.Submitted);
-        assert.equal((events[1] as TaskStatusUpdateEvent).status.state, TaskState.Working);
-        assert.equal((events[2] as TaskStatusUpdateEvent).status.state, TaskState.Completed);
+        assert.equal((events[0] as Task).status.state, "submitted");
+        assert.equal((events[1] as TaskStatusUpdateEvent).status.state, "working");
+        assert.equal((events[2] as TaskStatusUpdateEvent).status.state, "completed");
         assert.isTrue((events[2] as TaskStatusUpdateEvent).final);
     });
 
@@ -243,8 +243,8 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         const contextId = 'ctx-input';
 
         (mockAgentExecutor as MockAgentExecutor).execute.callsFake(async (ctx, bus) => {
-            bus.publish({ id: taskId, contextId, status: { state: TaskState.Submitted }, kind: 'task' });
-            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.InputRequired }, final: true });
+            bus.publish({ id: taskId, contextId, status: { state: "submitted" }, kind: 'task' });
+            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: "input-required" }, final: true });
             bus.finished();
         });
         
@@ -256,7 +256,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
 
         assert.lengthOf(events, 2);
         const lastEvent = events[1] as TaskStatusUpdateEvent;
-        assert.equal(lastEvent.status.state, TaskState.InputRequired);
+        assert.equal(lastEvent.status.state, "input-required");
         assert.isTrue(lastEvent.final);
     });
 
@@ -274,10 +274,10 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
             taskId = ctx.taskId;
             contextId = ctx.contextId;
 
-            bus.publish({ id: taskId, contextId, status: { state: TaskState.Submitted }, kind: 'task' });
-            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Working }, final: false });
+            bus.publish({ id: taskId, contextId, status: { state: "submitted" }, kind: 'task' });
+            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: "working" }, final: false });
             await clock.tickAsync(100);
-            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Completed }, final: true });
+            bus.publish({ taskId, contextId, kind: 'status-update', status: { state: "completed" }, final: true });
             bus.finished();
         });
     
@@ -309,25 +309,25 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         await clock.runAllAsync();
         await Promise.all([p1, p2]);
 
-        assert.equal((results1[0] as TaskStatusUpdateEvent).status.state, TaskState.Submitted);
-        assert.equal((results1[1] as TaskStatusUpdateEvent).status.state, TaskState.Working);
-        assert.equal((results1[2] as TaskStatusUpdateEvent).status.state, TaskState.Completed);
+        assert.equal((results1[0] as TaskStatusUpdateEvent).status.state, "submitted");
+        assert.equal((results1[1] as TaskStatusUpdateEvent).status.state, "working");
+        assert.equal((results1[2] as TaskStatusUpdateEvent).status.state, "completed");
 
         // First event of resubscribe is always a task.
-        assert.equal((results2[0] as Task).status.state, TaskState.Working);
-        assert.equal((results2[1] as TaskStatusUpdateEvent).status.state, TaskState.Completed);
+        assert.equal((results2[0] as Task).status.state, "working");
+        assert.equal((results2[1] as TaskStatusUpdateEvent).status.state, "completed");
         
         assert.isTrue(saveSpy.calledThrice, 'TaskStore.save should be called 3 times');
         const lastSaveCall = saveSpy.lastCall.args[0];
         assert.equal(lastSaveCall.id, taskId);
-        assert.equal(lastSaveCall.status.state, TaskState.Completed);
+        assert.equal(lastSaveCall.status.state, "completed");
     });
     
     it('getTask: should return an existing task from the store', async () => {
         const fakeTask: Task = {
             id: 'task-exist',
             contextId: 'ctx-exist',
-            status: { state: TaskState.Working },
+            status: { state: "working" },
             kind: 'task',
             history: []
         };
@@ -339,7 +339,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
 
     it('set/getTaskPushNotificationConfig: should save and retrieve config', async () => {
         const taskId = 'task-push-config';
-        const fakeTask: Task = { id: taskId, contextId: 'ctx-push', status: { state: TaskState.Working }, kind: 'task' };
+        const fakeTask: Task = { id: taskId, contextId: 'ctx-push', status: { state: "working" }, kind: 'task' };
         await mockTaskStore.save(fakeTask);
     
         const pushConfig: PushNotificationConfig = {
@@ -394,20 +394,20 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         assert.isTrue(cancellableExecutor.cancelTaskSpy.calledOnceWith(taskId, sinon.match.any));
         
         const lastEvent = streamEvents[streamEvents.length - 1] as TaskStatusUpdateEvent;
-        assert.equal(lastEvent.status.state, TaskState.Canceled);
+        assert.equal(lastEvent.status.state, "canceled");
         
         const finalTask = await handler.getTask({ id: taskId });
-        assert.equal(finalTask.status.state, TaskState.Canceled);
+        assert.equal(finalTask.status.state, "canceled");
 
         // Canceled API issues cancel request to executor and returns latest task state.
         // In this scenario, executor is waiting on clock to detect that task has been cancelled.
         // While the cancel API has returned with latest task state => Working.
-        assert.equal(cancelResponse.status.state, TaskState.Working);
+        assert.equal(cancelResponse.status.state, "working");
     });
 
     it('cancelTask: should fail for tasks in a terminal state', async () => {
         const taskId = 'task-terminal';
-        const fakeTask: Task = { id: taskId, contextId: 'ctx-terminal', status: { state: TaskState.Completed }, kind: 'task' };
+        const fakeTask: Task = { id: taskId, contextId: 'ctx-terminal', status: { state: "completed" }, kind: 'task' };
         await mockTaskStore.save(fakeTask);
 
         try {
