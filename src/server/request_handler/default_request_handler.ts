@@ -4,7 +4,7 @@ import { Message, AgentCard, PushNotificationConfig, Task, MessageSendParams, Ta
 import { AgentExecutor } from "../agent_execution/agent_executor.js";
 import { RequestContext } from "../agent_execution/request_context.js";
 import { A2AError } from "../error.js";
-import { ExecutionEventBusManager, IExecutionEventBusManager } from "../events/execution_event_bus_manager.js";
+import { ExecutionEventBusManager, DefaultExecutionEventBusManager } from "../events/execution_event_bus_manager.js";
 import { ExecutionEventQueue } from "../events/execution_event_queue.js";
 import { ResultManager } from "../result_manager.js";
 import { TaskStore } from "../store.js";
@@ -14,7 +14,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
     private readonly agentCard: AgentCard;
     private readonly taskStore: TaskStore;
     private readonly agentExecutor: AgentExecutor;
-    private readonly eventBusManager: IExecutionEventBusManager;
+    private readonly eventBusManager: ExecutionEventBusManager;
     // Store for push notification configurations (could be part of TaskStore or separate)
     private readonly pushNotificationConfigs: Map<string, PushNotificationConfig> = new Map();
 
@@ -23,7 +23,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         agentCard: AgentCard,
         taskStore: TaskStore,
         agentExecutor: AgentExecutor,
-        eventBusManager: IExecutionEventBusManager = new ExecutionEventBusManager(),
+        eventBusManager: ExecutionEventBusManager = new DefaultExecutionEventBusManager(),
     ) {
         this.agentCard = agentCard;
         this.taskStore = taskStore;

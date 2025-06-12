@@ -7,7 +7,7 @@ import {
   A2AExpressApp,
   AgentExecutor,
   RequestContext,
-  IExecutionEventBus,
+  ExecutionEventBus,
   DefaultRequestHandler,
   AgentCard,
   Task,
@@ -39,7 +39,7 @@ class MovieAgentExecutor implements AgentExecutor {
 
   public cancelTask = async (
         taskId: string,
-        eventBus: IExecutionEventBus,
+        eventBus: ExecutionEventBus,
     ): Promise<void> => {
         this.cancelledTasks.add(taskId);
         // The execute loop is responsible for publishing the final state
@@ -47,7 +47,7 @@ class MovieAgentExecutor implements AgentExecutor {
 
   async execute(
     requestContext: RequestContext,
-    eventBus: IExecutionEventBus
+    eventBus: ExecutionEventBus
   ): Promise<void> {
     const userMessage = requestContext.userMessage;
     const existingTask = requestContext.task;
