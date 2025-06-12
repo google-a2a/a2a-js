@@ -7,10 +7,10 @@
 export type { AgentExecutor } from "./server/agent_execution/agent_executor.js";
 export { RequestContext } from "./server/agent_execution/request_context.js";
 
-export type { IExecutionEventBus } from "./server/events/execution_event_bus.js";
-export { ExecutionEventBus } from "./server/events/execution_event_bus.js";
-export type { IExecutionEventBusManager } from "./server/events/execution_event_bus_manager.js";
-export { ExecutionEventBusManager } from "./server/events/execution_event_bus_manager.js";
+export type { ExecutionEventBus } from "./server/events/execution_event_bus.js";
+export { DefaultExecutionEventBus } from "./server/events/execution_event_bus.js";
+export type { ExecutionEventBusManager } from "./server/events/execution_event_bus_manager.js";
+export { DefaultExecutionEventBusManager } from "./server/events/execution_event_bus_manager.js";
 
 export type { A2ARequestHandler } from "./server/request_handler/a2a_request_handler.js";
 export { DefaultRequestHandler } from "./server/request_handler/default_request_handler.js";

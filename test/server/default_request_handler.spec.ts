@@ -4,8 +4,8 @@ import sinon, { SinonStub, SinonFakeTimers } from 'sinon';
 
 import { AgentExecutor } from '../../src/server/agent_execution/agent_executor.js';
 import { describe, beforeEach, afterEach, it } from 'node:test';
-import { RequestContext, IExecutionEventBus, TaskStore, InMemoryTaskStore, DefaultRequestHandler, AgentCard, Artifact, Message, MessageSendParams, PushNotificationConfig, Task, TaskIdParams, TaskPushNotificationConfig, TaskState, TaskStatusUpdateEvent } from '../../src/index.js';
-import { ExecutionEventBusManager } from '../../src/server/events/execution_event_bus_manager.js';
+import { RequestContext, ExecutionEventBus, TaskStore, InMemoryTaskStore, DefaultRequestHandler, AgentCard, Artifact, Message, MessageSendParams, PushNotificationConfig, Task, TaskIdParams, TaskPushNotificationConfig, TaskState, TaskStatusUpdateEvent } from '../../src/index.js';
+import { DefaultExecutionEventBusManager, ExecutionEventBusManager } from '../../src/server/events/execution_event_bus_manager.js';
 import { A2ARequestHandler } from '../../src/server/request_handler/a2a_request_handler.js';
 
 /**
@@ -21,7 +21,7 @@ class CancellableMockAgentExecutor implements AgentExecutor {
 
     public execute = async (
         requestContext: RequestContext,
-        eventBus: IExecutionEventBus,
+        eventBus: ExecutionEventBus,
     ): Promise<void> => {
         const taskId = requestContext.taskId;
         const contextId = requestContext.contextId;
@@ -46,7 +46,7 @@ class CancellableMockAgentExecutor implements AgentExecutor {
     
     public cancelTask = async (
         taskId: string,
-        eventBus: IExecutionEventBus,
+        eventBus: ExecutionEventBus,
     ): Promise<void> => {
         this.cancelledTasks.add(taskId);
         // The execute loop is responsible for publishing the final state
@@ -89,7 +89,7 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         mockTaskStore = new InMemoryTaskStore();
         // Default mock for most tests
         mockAgentExecutor = new MockAgentExecutor();
-        executionEventBusManager = new ExecutionEventBusManager();
+        executionEventBusManager = new DefaultExecutionEventBusManager();
         handler = new DefaultRequestHandler(
             testAgentCard,
             mockTaskStore,
@@ -120,10 +120,10 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
     class MockAgentExecutor implements AgentExecutor {
         // Stubs to control and inspect calls to execute and cancelTask
         public execute: SinonStub<
-            [RequestContext, IExecutionEventBus],
+            [RequestContext, ExecutionEventBus],
             Promise<void>
         > = sinon.stub();
-        public cancelTask: SinonStub<[string, IExecutionEventBus], Promise<void>> =
+        public cancelTask: SinonStub<[string, ExecutionEventBus], Promise<void>> =
             sinon.stub();
     }
 

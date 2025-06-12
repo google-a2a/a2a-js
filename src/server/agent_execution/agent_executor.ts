@@ -1,4 +1,4 @@
-import { IExecutionEventBus } from "../events/execution_event_bus.js";
+import { ExecutionEventBus } from "../events/execution_event_bus.js";
 import { RequestContext } from "./request_context.js";
 
 export interface AgentExecutor {
@@ -9,7 +9,7 @@ export interface AgentExecutor {
      */
     execute: (
         requestContext: RequestContext,
-        eventBus: IExecutionEventBus
+        eventBus: ExecutionEventBus
     ) => Promise<void>;
 
     /**
@@ -21,6 +21,6 @@ export interface AgentExecutor {
      */
     cancelTask: (
         taskId: string,
-        eventBus: IExecutionEventBus
+        eventBus: ExecutionEventBus
     ) => Promise<void>;
 }

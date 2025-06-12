@@ -13,7 +13,7 @@ export type AgentExecutionEvent =
     | TaskStatusUpdateEvent
     | TaskArtifactUpdateEvent;
 
-export interface IExecutionEventBus {
+export interface ExecutionEventBus {
     publish(event: AgentExecutionEvent): void;
     on(eventName: 'event' | 'finished', listener: (event: AgentExecutionEvent) => void): this;
     off(eventName: 'event' | 'finished', listener: (event: AgentExecutionEvent) => void): this;
@@ -22,7 +22,7 @@ export interface IExecutionEventBus {
     finished(): void;
 }
 
-export class ExecutionEventBus extends EventEmitter implements IExecutionEventBus {
+export class DefaultExecutionEventBus extends EventEmitter implements ExecutionEventBus {
     constructor() {
         super();
     }

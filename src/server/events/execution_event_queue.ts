@@ -1,20 +1,20 @@
 import {
     TaskStatusUpdateEvent,
 } from "../../types.js";
-import { IExecutionEventBus, AgentExecutionEvent } from "./execution_event_bus.js";
+import { ExecutionEventBus, AgentExecutionEvent } from "./execution_event_bus.js";
 
 /**
  * An async queue that subscribes to an ExecutionEventBus for events
  * and provides an async generator to consume them.
  */
 export class ExecutionEventQueue {
-    private eventBus: IExecutionEventBus;
+    private eventBus: ExecutionEventBus;
     private eventQueue: AgentExecutionEvent[] = [];
     private resolvePromise?: (value: void | PromiseLike<void>) => void;
     private stopped: boolean = false;
     private boundHandleEvent: (event: AgentExecutionEvent) => void;
 
-    constructor(eventBus: IExecutionEventBus) {
+    constructor(eventBus: ExecutionEventBus) {
         this.eventBus = eventBus;
         this.eventBus.on('event', this.handleEvent);
         this.eventBus.on('finished', this.handleFinished);
