@@ -103,8 +103,9 @@ class MyAgentExecutor implements AgentExecutor {
     const userMessage = requestContext.userMessage;
     const existingTask = requestContext.task;
 
-    const taskId = existingTask?.id || uuidv4();
-    const contextId = userMessage.contextId || existingTask?.contextId || uuidv4();
+    // Determine IDs for the task and context, from requestContext.
+    const taskId = requestContext.taskId;
+    const contextId = requestContext.contextId;
 
     console.log(
       `[MyAgentExecutor] Processing message ${userMessage.messageId} for task ${taskId} (context: ${contextId})`
@@ -235,7 +236,7 @@ Developers are expected to implement this interface and provide two methods: `ex
 #### `execute`
 - This method is provided with a `RequestContext` and an `EventBus` to publish execution events.
 - Executor can either respond by publishing a Message or Task.
-- For a task, the first event should be a Task object.
+- For a task, check if there's an existing task in `RequestContext`. If not, publish an initial Task event using `taskId` & `contextId` from `RequestContext`.
 - Executor can subsequently publish `TaskStatusUpdateEvent` or `TaskArtifactUpdateEvent`.
 - Executor should indicate which is the `final` event and also call `finished()` method of event bus.
 - Executor should also check if an ongoing task has been cancelled. If yes, cancel the execution and emit an `TaskStatusUpdateEvent` with cancelled state.

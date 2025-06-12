@@ -37,12 +37,13 @@ export class DefaultRequestHandler implements A2ARequestHandler {
 
     private async _createRequestContext(
         incomingMessage: Message,
+        taskId: string,
         isStream: boolean,
-        resultManager: ResultManager // The ResultManager for this specific request
     ): Promise<RequestContext> {
         let task: Task | undefined;
         let referenceTasks: Task[] | undefined;
 
+        // incomingMessage would contain taskId, if a task already exists.
         if (incomingMessage.taskId) {
             task = await this.taskStore.load(incomingMessage.taskId);
             if (!task) {
@@ -69,8 +70,12 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             messageForContext.contextId = task?.contextId || uuidv4();
         }
 
+        const contextId = incomingMessage.contextId || uuidv4();
+
         return new RequestContext(
             messageForContext,
+            taskId,
+            contextId,
             task,
             referenceTasks
         );
@@ -85,18 +90,18 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             throw A2AError.invalidParams('message.messageId is required.');
         }
 
+        const taskId = incomingMessage.taskId || uuidv4();
+
         // Instantiate ResultManager before creating RequestContext
         const resultManager = new ResultManager(this.taskStore);
         resultManager.setContext(incomingMessage); // Set context for ResultManager
 
-        const requestContext = await this._createRequestContext(incomingMessage, false, resultManager);
+        const requestContext = await this._createRequestContext(incomingMessage, taskId, false);
         // Use the (potentially updated) contextId from requestContext
         const finalMessageForAgent = requestContext.userMessage;
 
 
-        const eventBus = this.eventBusManager.createOrGetByMessageId(
-            finalMessageForAgent.messageId
-        );
+        const eventBus = this.eventBusManager.createOrGetByTaskId(taskId);
         const eventQueue = new ExecutionEventQueue(eventBus);
 
         // Start agent execution (non-blocking)
@@ -141,9 +146,6 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         for await (const event of eventQueue.events()) {
             // lastEvent is no longer needed here as ResultManager tracks the final result type
             await resultManager.processEvent(event);
-            if (event.kind === 'task') {
-                this.eventBusManager.associateTask(event.id, finalMessageForAgent.messageId);
-            }
         }
 
         const finalResult = resultManager.getFinalResult();
@@ -151,8 +153,8 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             throw A2AError.internalError('Agent execution finished without a result, and no task context found.');
         }
 
-        // Cleanup after processing is complete for this messageId
-        this.eventBusManager.cleanupByMessageId(finalMessageForAgent.messageId);
+        // Cleanup after processing is complete for taskId
+        this.eventBusManager.cleanupByTaskId(taskId);
         return finalResult;
     }
 
@@ -173,16 +175,16 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             throw A2AError.invalidParams('message.messageId is required for streaming.');
         }
 
+        const taskId = incomingMessage.taskId || uuidv4();
+
         // Instantiate ResultManager before creating RequestContext
         const resultManager = new ResultManager(this.taskStore);
         resultManager.setContext(incomingMessage); // Set context for ResultManager
 
-        const requestContext = await this._createRequestContext(incomingMessage, false, resultManager);
+        const requestContext = await this._createRequestContext(incomingMessage, taskId, true);
         const finalMessageForAgent = requestContext.userMessage;
 
-        const eventBus = this.eventBusManager.createOrGetByMessageId(
-            finalMessageForAgent.messageId
-        );
+        const eventBus = this.eventBusManager.createOrGetByTaskId(taskId);
         const eventQueue = new ExecutionEventQueue(eventBus);
 
 
@@ -214,14 +216,11 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         try {
             for await (const event of eventQueue.events()) {
                 await resultManager.processEvent(event); // Update store in background
-                if (event.kind === 'task') {
-                    this.eventBusManager.associateTask(event.id, finalMessageForAgent.messageId);
-                }
                 yield event; // Stream the event to the client
             }
         } finally {
             // Cleanup when the stream is fully consumed or breaks
-            this.eventBusManager.cleanupByMessageId(finalMessageForAgent.messageId);
+            this.eventBusManager.cleanupByTaskId(taskId);
         }
     }
 

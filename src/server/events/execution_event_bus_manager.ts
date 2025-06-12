@@ -1,42 +1,24 @@
 import { ExecutionEventBus, IExecutionEventBus } from "./execution_event_bus.js";
 
 export interface IExecutionEventBusManager {
-    createOrGetByMessageId(messageId: string): IExecutionEventBus;
-    associateTask(taskId: string, messageId: string): void;
+    createOrGetByTaskId(taskId: string): IExecutionEventBus;
     getByTaskId(taskId: string): IExecutionEventBus | undefined;
-    cleanupByMessageId(messageId: string): void;
+    cleanupByTaskId(taskId: string): void;
 }
 
 export class ExecutionEventBusManager implements IExecutionEventBusManager {
-    private messageIdToBus: Map<string, IExecutionEventBus> = new Map();
-    private taskIdToMessageId: Map<string, string> = new Map();
+    private taskIdToBus: Map<string, IExecutionEventBus> = new Map();
 
     /**
-     * Creates or retrieves an existing ExecutionEventBus based on the messageId.
-     * @param messageId The ID of the message.
+     * Creates or retrieves an existing ExecutionEventBus based on the taskId.
+     * @param taskId The ID of the task.
      * @returns An instance of IExecutionEventBus.
      */
-    public createOrGetByMessageId(messageId: string): IExecutionEventBus {
-        if (!this.messageIdToBus.has(messageId)) {
-            this.messageIdToBus.set(messageId, new ExecutionEventBus());
+    public createOrGetByTaskId(taskId: string): IExecutionEventBus {
+        if (!this.taskIdToBus.has(taskId)) {
+            this.taskIdToBus.set(taskId, new ExecutionEventBus());
         }
-        return this.messageIdToBus.get(messageId)!;
-    }
-
-    /**
-     * Associates a taskId with a messageId.
-     * This allows retrieving the event bus using the taskId.
-     * @param taskId The ID of the task.
-     * @param messageId The ID of the message that initiated the task.
-     */
-    public associateTask(taskId: string, messageId: string): void {
-        if (this.messageIdToBus.has(messageId)) {
-            this.taskIdToMessageId.set(taskId, messageId);
-        } else {
-            console.warn(
-                `ExecutionEventBusManager: Cannot associate task ${taskId}. No event bus found for messageId ${messageId}.`
-            );
-        }
+        return this.taskIdToBus.get(taskId)!;
     }
 
     /**
@@ -45,29 +27,19 @@ export class ExecutionEventBusManager implements IExecutionEventBusManager {
      * @returns An instance of IExecutionEventBus or undefined if not found.
      */
     public getByTaskId(taskId: string): IExecutionEventBus | undefined {
-        const messageId = this.taskIdToMessageId.get(taskId);
-        if (messageId) {
-            return this.messageIdToBus.get(messageId);
-        }
-        return undefined;
+        return this.taskIdToBus.get(taskId);
     }
 
     /**
-     * Removes the event bus and any associations for a given messageId.
+     * Removes the event bus for a given taskId.
      * This should be called when an execution flow is complete to free resources.
-     * @param messageId The ID of the message.
+     * @param taskId The ID of the task.
      */
-    public cleanupByMessageId(messageId: string): void {
-        const bus = this.messageIdToBus.get(messageId);
+    public cleanupByTaskId(taskId: string): void {
+        const bus = this.taskIdToBus.get(taskId);
         if (bus) {
             bus.removeAllListeners();
         }
-        this.messageIdToBus.delete(messageId);
-        // Also remove any taskId associations
-        for (const [taskId, msgId] of this.taskIdToMessageId.entries()) {
-            if (msgId === messageId) {
-                this.taskIdToMessageId.delete(taskId);
-            }
-        }
+        this.taskIdToBus.delete(taskId);
     }
 }

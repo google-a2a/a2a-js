@@ -53,8 +53,8 @@ class MovieAgentExecutor implements AgentExecutor {
     const existingTask = requestContext.task;
 
     // Determine IDs for the task and context
-    const taskId = existingTask?.id || uuidv4();
-    const contextId = userMessage.contextId || existingTask?.contextId || uuidv4(); // DefaultRequestHandler should ensure userMessage.contextId
+    const taskId = requestContext.taskId;
+    const contextId = requestContext.contextId;
 
     console.log(
       `[MovieAgentExecutor] Processing message ${userMessage.messageId} for task ${taskId} (context: ${contextId})`

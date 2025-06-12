@@ -23,8 +23,8 @@ class CancellableMockAgentExecutor implements AgentExecutor {
         requestContext: RequestContext,
         eventBus: IExecutionEventBus,
     ): Promise<void> => {
-        const taskId = `task-for-${requestContext.userMessage.messageId}`;
-        const contextId = `ctx-for-${requestContext.userMessage.messageId}`;
+        const taskId = requestContext.taskId;
+        const contextId = requestContext.contextId;
         
         eventBus.publish({ id: taskId, contextId, status: { state: TaskState.Submitted }, kind: 'task' });
         eventBus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Working }, final: false });
@@ -266,10 +266,14 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         const params: MessageSendParams = {
             message: createTestMessage('msg-5', 'Long running task')
         };
-        const taskId = "task-resub";
-        const contextId = "ctx-resub";
+
+        let taskId;
+        let contextId;
     
         (mockAgentExecutor as MockAgentExecutor).execute.callsFake(async (ctx, bus) => {
+            taskId = ctx.taskId;
+            contextId = ctx.contextId;
+
             bus.publish({ id: taskId, contextId, status: { state: TaskState.Submitted }, kind: 'task' });
             bus.publish({ taskId, contextId, kind: 'status-update', status: { state: TaskState.Working }, final: false });
             await clock.tickAsync(100);
