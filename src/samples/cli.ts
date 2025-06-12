@@ -278,7 +278,7 @@ async function main() {
           printAgentEvent(typedEvent);
 
           // If the event is a TaskStatusUpdateEvent and it's final, reset currentTaskId
-          if (typedEvent.kind === "status-update" && (typedEvent as TaskStatusUpdateEvent).final && (typedEvent as TaskStatusUpdateEvent).status.state !== TaskState.InputRequired) {
+          if (typedEvent.kind === "status-update" && (typedEvent as TaskStatusUpdateEvent).final && (typedEvent as TaskStatusUpdateEvent).status.state !== "input-required") {
             console.log(colorize("yellow", `   Task ${typedEvent.taskId} is final. Clearing current task ID.`));
             currentTaskId = undefined;
             // Optionally, you might want to clear currentContextId as well if a task ending implies context ending.
