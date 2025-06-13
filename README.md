@@ -80,7 +80,7 @@ import {
   A2AExpressApp,
   AgentExecutor,
   RequestContext,
-  IExecutionEventBus,
+  ExecutionEventBus,
   DefaultRequestHandler,
 } from "@a2a-js/sdk";
 
@@ -90,7 +90,7 @@ class MyAgentExecutor implements AgentExecutor {
 
   public cancelTask = async (
         taskId: string,
-        eventBus: IExecutionEventBus,
+        eventBus: ExecutionEventBus,
     ): Promise<void> => {
         this.cancelledTasks.add(taskId);
         // The execute loop is responsible for publishing the final state
@@ -98,7 +98,7 @@ class MyAgentExecutor implements AgentExecutor {
 
   async execute(
     requestContext: RequestContext,
-    eventBus: IExecutionEventBus
+    eventBus: ExecutionEventBus
   ): Promise<void> {
     const userMessage = requestContext.userMessage;
     const existingTask = requestContext.task;
@@ -118,7 +118,7 @@ class MyAgentExecutor implements AgentExecutor {
         id: taskId,
         contextId: contextId,
         status: {
-          state: TaskState.Submitted,
+          state: 'submitted',
           timestamp: new Date().toISOString(),
         },
         history: [userMessage],
@@ -134,7 +134,7 @@ class MyAgentExecutor implements AgentExecutor {
       taskId: taskId,
       contextId: contextId,
       status: {
-        state: TaskState.Working,
+        state: 'working',
         message: {
           kind: 'message',
           role: 'agent',
@@ -160,7 +160,7 @@ class MyAgentExecutor implements AgentExecutor {
         taskId: taskId,
         contextId: contextId,
         status: {
-          state: TaskState.Canceled,
+          state: "canceled",
           timestamp: new Date().toISOString(),
         },
         final: true,
@@ -191,7 +191,7 @@ class MyAgentExecutor implements AgentExecutor {
       taskId: taskId,
       contextId: contextId,
       status: {
-        state: TaskState.Completed,
+        state: "completed",
         message: {
           kind: 'message',
           role: 'agent',
