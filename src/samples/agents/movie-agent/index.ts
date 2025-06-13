@@ -162,7 +162,7 @@ class MovieAgentExecutor implements AgentExecutor {
           taskId: taskId,
           contextId: contextId,
           status: {
-            state: "canceled",
+            state: 'canceled',
             timestamp: new Date().toISOString(),
           },
           final: true, // Cancellation is a final state
@@ -180,14 +180,14 @@ class MovieAgentExecutor implements AgentExecutor {
       let finalA2AState: TaskState = "unknown";
 
       if (finalStateLine === 'COMPLETED') {
-        finalA2AState = "completed";
+        finalA2AState = 'completed';
       } else if (finalStateLine === 'AWAITING_USER_INPUT') {
-        finalA2AState = "input-required";
+        finalA2AState = 'input-required';
       } else {
         console.warn(
           `[MovieAgentExecutor] Unexpected final state line from prompt: ${finalStateLine}. Defaulting to 'completed'.`
         );
-        finalA2AState = "completed"; // Default if LLM deviates
+        finalA2AState = 'completed'; // Default if LLM deviates
       }
 
       // 5. Publish final task status update
@@ -229,7 +229,7 @@ class MovieAgentExecutor implements AgentExecutor {
         taskId: taskId,
         contextId: contextId,
         status: {
-          state: "failed",
+          state: 'failed',
           message: {
             kind: 'message',
             role: 'agent',

@@ -160,7 +160,7 @@ class MyAgentExecutor implements AgentExecutor {
         taskId: taskId,
         contextId: contextId,
         status: {
-          state: "canceled",
+          state: 'canceled',
           timestamp: new Date().toISOString(),
         },
         final: true,
@@ -191,7 +191,7 @@ class MyAgentExecutor implements AgentExecutor {
       taskId: taskId,
       contextId: contextId,
       status: {
-        state: "completed",
+        state: 'completed',
         message: {
           kind: 'message',
           role: 'agent',
