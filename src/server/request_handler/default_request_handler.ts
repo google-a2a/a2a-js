@@ -5,6 +5,7 @@ import { AgentExecutor } from "../agent_execution/agent_executor.js";
 import { RequestContext } from "../agent_execution/request_context.js";
 import { A2AError } from "../error.js";
 import { ExecutionEventBusManager, DefaultExecutionEventBusManager } from "../events/execution_event_bus_manager.js";
+import { ExecutionEventBus } from "../events/execution_event_bus.js";
 import { ExecutionEventQueue } from "../events/execution_event_queue.js";
 import { ResultManager } from "../result_manager.js";
 import { TaskStore } from "../store.js";
@@ -81,6 +82,41 @@ export class DefaultRequestHandler implements A2ARequestHandler {
         );
     }
 
+    private async _processEvents(
+        taskId: string,
+        resultManager: ResultManager,
+        eventQueue: ExecutionEventQueue,
+        options?: {
+            firstResultResolver?: (value: Message | Task | PromiseLike<Message | Task>) => void;
+            firstResultRejector?: (reason?: any) => void;
+        }
+    ): Promise<void> {
+        let firstResultSent = false;
+        try {
+            for await (const event of eventQueue.events()) {
+                await resultManager.processEvent(event);
+
+                if (options?.firstResultResolver && !firstResultSent) {
+                    if (event.kind === 'message' || event.kind === 'task') {
+                        options.firstResultResolver(event as Message | Task);
+                        firstResultSent = true;
+                    }
+                }
+            }
+            if (options?.firstResultRejector && !firstResultSent) {
+                options.firstResultRejector(A2AError.internalError('Execution finished before a message or task was produced.'));
+            }
+        } catch (error) {
+            console.error(`Event processing loop failed for task ${taskId}:`, error);
+            if (options?.firstResultRejector && !firstResultSent) {
+                options.firstResultRejector(error);
+            }
+            // re-throw error for blocking case to catch
+            throw error;
+        } finally {
+            this.eventBusManager.cleanupByTaskId(taskId);
+        }
+    }
 
     async sendMessage(
         params: MessageSendParams
@@ -90,6 +126,8 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             throw A2AError.invalidParams('message.messageId is required.');
         }
 
+        // Default to blocking behavior if 'blocking' is not explicitly false.
+        const isBlocking = params.configuration?.blocking !== false;
         const taskId = incomingMessage.taskId || uuidv4();
 
         // Instantiate ResultManager before creating RequestContext
@@ -102,13 +140,15 @@ export class DefaultRequestHandler implements A2ARequestHandler {
 
 
         const eventBus = this.eventBusManager.createOrGetByTaskId(taskId);
+        // EventQueue should be attached to the bus, before the agent execution begins.
         const eventQueue = new ExecutionEventQueue(eventBus);
-
-        // Start agent execution (non-blocking)
+        
+        // Start agent execution (non-blocking).
+        // It runs in the background and publishes events to the eventBus.
         this.agentExecutor.execute(requestContext, eventBus).catch(err => {
             console.error(`Agent execution failed for message ${finalMessageForAgent.messageId}:`, err);
-            // Publish a synthetic error event if needed, or handle error reporting
-            // For example, create a Task with a failed status
+            // Publish a synthetic error event, which will be handled by the ResultManager
+            // and will also settle the firstResultPromise for non-blocking calls.
             const errorTask: Task = {
                 id: requestContext.task?.id || uuidv4(), // Use existing task ID or generate new
                 contextId: finalMessageForAgent.contextId!,
@@ -132,7 +172,7 @@ export class DefaultRequestHandler implements A2ARequestHandler {
                     errorTask.history?.push(finalMessageForAgent);
                 }
             }
-            eventBus.publish(errorTask); // This will update the task store via ResultManager
+            eventBus.publish(errorTask);
             eventBus.publish({ // And publish a final status update
                 kind: "status-update",
                 taskId: errorTask.id,
@@ -143,19 +183,24 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             eventBus.finished();
         });
 
-        for await (const event of eventQueue.events()) {
-            // lastEvent is no longer needed here as ResultManager tracks the final result type
-            await resultManager.processEvent(event);
-        }
+        if (isBlocking) {
+            // In blocking mode, wait for the full processing to complete.
+            await this._processEvents(taskId, resultManager, eventQueue);
+            const finalResult = resultManager.getFinalResult();
+            if (!finalResult) {
+                throw A2AError.internalError('Agent execution finished without a result, and no task context found.');
+            }
 
-        const finalResult = resultManager.getFinalResult();
-        if (!finalResult) {
-            throw A2AError.internalError('Agent execution finished without a result, and no task context found.');
+            return finalResult;
+        } else {
+            // In non-blocking mode, return a promise that will be settled by fullProcessing.
+            return new Promise<Message | Task>((resolve, reject) => {
+                this._processEvents(taskId, resultManager, eventQueue, {
+                    firstResultResolver: resolve,
+                    firstResultRejector: reject,
+                });
+            });
         }
-
-        // Cleanup after processing is complete for taskId
-        this.eventBusManager.cleanupByTaskId(taskId);
-        return finalResult;
     }
 
     async *sendMessageStream(
