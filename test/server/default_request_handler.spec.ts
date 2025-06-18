@@ -206,6 +206,22 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         assert.deepEqual(taskResult.artifacts![0], testArtifact);
     });
 
+    it('sendMessage: should handle agent execution failure for blocking calls', async () => {
+        const errorMessage = 'Agent failed!';
+        (mockAgentExecutor as MockAgentExecutor).execute.rejects(new Error(errorMessage));
+    
+        // Test blocking case
+        const blockingParams: MessageSendParams = {
+            message: createTestMessage('msg-fail-block', 'Test failure blocking'),
+        };
+        
+        const blockingResult = await handler.sendMessage(blockingParams);
+        const blockingTask = blockingResult as Task;
+        assert.equal(blockingTask.kind, 'task', 'Result should be a task');
+        assert.equal(blockingTask.status.state, 'failed', 'Task status should be failed');
+        assert.include((blockingTask.status.message?.parts[0] as any).text, errorMessage, 'Error message should be in the status');
+    });
+
     it('sendMessage: (non-blocking) should return first task event immediately and process full task in background', async () => {
         clock = sinon.useFakeTimers();
         const saveSpy = sinon.spy(mockTaskStore, 'save');
@@ -262,6 +278,23 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         assert.equal(finalTask!.status.state, 'completed', "Task should be 'completed' in the store after background processing");
         assert.isTrue(saveSpy.calledTwice, "Save should be called twice (submitted and completed)");
         assert.equal(saveSpy.secondCall.args[0].status.state, 'completed');
+    });
+
+    it('sendMessage: should handle agent execution failure for non-blocking calls', async () => {
+        const errorMessage = 'Agent failed!';
+        (mockAgentExecutor as MockAgentExecutor).execute.rejects(new Error(errorMessage));
+    
+        // Test non-blocking case
+        const nonBlockingParams: MessageSendParams = {
+            message: createTestMessage('msg-fail-nonblock', 'Test failure non-blocking'),
+            configuration: { blocking: false, acceptedOutputModes: [] },
+        };
+
+        const nonBlockingResult = await handler.sendMessage(nonBlockingParams);
+        const nonBlockingTask = nonBlockingResult as Task;
+        assert.equal(nonBlockingTask.kind, 'task', 'Result should be a task');
+        assert.equal(nonBlockingTask.status.state, 'failed', 'Task status should be failed');
+        assert.include((nonBlockingTask.status.message?.parts[0] as any).text, errorMessage, 'Error message should be in the status');
     });
 
     it('sendMessageStream: should stream submitted, working, and completed events', async () => {
