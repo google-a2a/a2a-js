@@ -11,6 +11,8 @@ import { ResultManager } from "../result_manager.js";
 import { TaskStore } from "../store.js";
 import { A2ARequestHandler } from "./a2a_request_handler.js";
 
+const terminalStates: TaskState[] = ["completed", "failed", "canceled", "rejected"];
+
 export class DefaultRequestHandler implements A2ARequestHandler {
     private readonly agentCard: AgentCard;
     private readonly taskStore: TaskStore;
@@ -49,6 +51,11 @@ export class DefaultRequestHandler implements A2ARequestHandler {
             task = await this.taskStore.load(incomingMessage.taskId);
             if (!task) {
                 throw A2AError.taskNotFound(incomingMessage.taskId);
+            }
+            
+            if (terminalStates.includes(task.status.state)) {
+                // Throw an error that conforms to the JSON-RPC Invalid Request error specification.
+                throw A2AError.invalidRequest(`Task ${task.id} is in a terminal state (${task.status.state}) and cannot be modified.`)
             }
         }
 

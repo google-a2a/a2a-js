@@ -326,6 +326,58 @@ describe('DefaultRequestHandler as A2ARequestHandler', () => {
         assert.isTrue((events[2] as TaskStatusUpdateEvent).final);
     });
 
+    it('sendMessage: should reject if task is in a terminal state', async () => {
+        const taskId = 'task-terminal-1';
+        const terminalStates: TaskState[] = ['completed', 'failed', 'canceled', 'rejected'];
+
+        for (const state of terminalStates) {
+            const fakeTask: Task = {
+                id: taskId,
+                contextId: 'ctx-terminal',
+                status: { state: state as TaskState },
+                kind: 'task'
+            };
+            await mockTaskStore.save(fakeTask);
+
+            const params: MessageSendParams = {
+                message: { ...createTestMessage('msg-1', 'test'), taskId: taskId }
+            };
+
+            try {
+                await handler.sendMessage(params);
+                assert.fail(`Should have thrown for state: ${state}`);
+            } catch (error: any) {
+                expect(error.code).to.equal(-32600); // Invalid Request
+                expect(error.message).to.contain(`Task ${taskId} is in a terminal state (${state}) and cannot be modified.`);
+            }
+        }
+    });
+
+    it('sendMessageStream: should reject if task is in a terminal state', async () => {
+        const taskId = 'task-terminal-2';
+        const fakeTask: Task = {
+            id: taskId,
+            contextId: 'ctx-terminal-stream',
+            status: { state: 'completed' },
+            kind: 'task'
+        };
+        await mockTaskStore.save(fakeTask);
+
+        const params: MessageSendParams = {
+            message: { ...createTestMessage('msg-1', 'test'), taskId: taskId }
+        };
+
+        const generator = handler.sendMessageStream(params);
+
+        try {
+            await generator.next();
+            assert.fail('sendMessageStream should have thrown an error');
+        } catch(error: any) {
+            expect(error.code).to.equal(-32600);
+            expect(error.message).to.contain(`Task ${taskId} is in a terminal state (completed) and cannot be modified.`);
+        }
+    });
+
     it('sendMessageStream: should stop at input-required state', async () => {
         const params: MessageSendParams = {
             message: createTestMessage('msg-4', 'I need input')
