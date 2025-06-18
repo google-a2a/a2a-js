@@ -19,6 +19,7 @@ import {
   Part, // Added for explicit Part typing
   A2AClient,
 } from "../index.js";
+import { createAuthHandler } from "./universal-auth.js";
 
 // --- ANSI Colors ---
 const colors = {
@@ -47,7 +48,12 @@ function generateId(): string { // Renamed for more general use
 let currentTaskId: string | undefined = undefined; // Initialize as undefined
 let currentContextId: string | undefined = undefined; // Initialize as undefined
 const serverUrl = process.argv[2] || "http://localhost:41241"; // Agent's base URL
-const client = new A2AClient(serverUrl);
+
+// Use universal authentication?
+const userAgentDid = process.argv[3];
+const authProfile = process.argv[4] ?? "a2a-demo-user";
+
+let client: A2AClient; // Declare client variable
 let agentName = "Agent"; // Default, try to get from agent card later
 
 // --- Readline Setup ---
@@ -194,6 +200,10 @@ async function fetchAndDisplayAgentCard() {
 async function main() {
   console.log(colorize("bright", `A2A Terminal Client`));
   console.log(colorize("dim", `Agent Base URL: ${serverUrl}`));
+
+  // Initialize the client with proper authentication
+  const authHandler = userAgentDid ? await createAuthHandler(authProfile, userAgentDid) : undefined;
+  client = new A2AClient(serverUrl, { authHandler });
 
   await fetchAndDisplayAgentCard(); // Fetch the card before starting the loop
 

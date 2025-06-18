@@ -15,6 +15,7 @@
     "README.md"
   ],
   "devDependencies": {
+    "@agentic-profile/eliza": "^0.1.0",
     "@genkit-ai/googleai": "^1.8.0",
     "@genkit-ai/vertexai": "^1.8.0",
     "@types/chai": "^5.2.2",
@@ -39,9 +40,12 @@
     "coverage": "c8 npm run test",
     "generate": "curl https://raw.githubusercontent.com/google-a2a/A2A/refs/heads/main/specification/json/a2a.json > spec.json && node scripts/generateTypes.js && rm spec.json",
     "sample:cli": "tsx src/samples/cli.ts",
-    "sample:movie-agent": "tsx src/samples/agents/movie-agent/index.ts"
+    "sample:movie-agent": "tsx src/samples/agents/movie-agent/index.ts",
+    "agent:eliza": "tsx src/samples/agents/eliza/eliza-app.ts",
+    "create-demo-agentic-profile": "tsx scripts/create-global-agentic-profile.ts"
   },
   "dependencies": {
+    "@agentic-profile/auth": "^0.6.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "body-parser": "^2.2.0",
